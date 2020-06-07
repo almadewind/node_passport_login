@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const passport = require('passport');
 
 // Use model
 const User = require('../models/User');
@@ -65,12 +66,14 @@ router.post('/register', (req, res) => {
             // Set apiKey to hashed
             newUser.password = hash;
 
-            console.log(newUser);
             // Save user
             newUser
               .save()
               .then((user) => {
-                req.flash('success_msg', 'You are now registered and can login');
+                req.flash(
+                  'success_msg',
+                  'You are now registered and can login'
+                );
                 res.redirect('/users/login');
               })
               .catch((err) => console.log('err'));
@@ -79,6 +82,22 @@ router.post('/register', (req, res) => {
       }
     });
   }
+});
+
+// Login Handle
+router.post('/login', (req, res, next) => {
+  passport.authenticate('local', {
+    successRedirect: '/dashboard',
+    failureRedirect: '/users/login',
+    failureFlash: true
+  })(req, res, next);
+});
+
+// Logout
+router.get('/logout', (req, res) => {
+  req.logout();
+  req.flash('success_msg', 'You are logged out');
+  res.redirect('/users/login');
 });
 
 module.exports = router;
